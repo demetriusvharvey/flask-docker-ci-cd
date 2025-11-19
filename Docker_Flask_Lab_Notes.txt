@@ -1,0 +1,57 @@
+Docker Flask Lab Notes
+======================
+
+Project Folder:
+C:\Users\dharvey\Desktop\Terraform Labs\docker_lab
+
+Folder Structure:
+docker_lab/
+├─ app.py
+├─ Dockerfile
+├─ requirements.txt
+├─ venv/
+└─ screenshots/
+
+Screenshots Taken:
+01_docker_lab_folder_structure.png – initial folder before creating files
+02_docker_lab_files.png – folder with app.py, Dockerfile, requirements.txt, venv
+03_app_py_code.png – contents of app.py
+04_dockerfile_code.png – contents of Dockerfile
+05_requirements_txt.png – contents of requirements.txt
+06_docker_build.png – Docker build output
+07_docker_run.png – Docker run terminal output
+08_browser_output.png – browser showing Flask app
+
+Step 1: Create Python Virtual Environment
+-----------------------------------------
+cd "C:\Users\dharvey\Desktop\Terraform Labs\docker_lab"
+python -m venv venv
+venv\Scripts\activate
+pip install flask
+
+Step 2: Create Flask App (app.py)
+---------------------------------
+from flask import Flask
+
+app = Flask(__name__)
+
+@app.route('/')
+def hello():
+    return "Hello from Docker Lab!"
+
+if __name__ == '__main__':
+    app.run(host='0.0.0.0', port=5000)
+
+Test locally:
+python app.py
+Open browser: http://127.0.0.1:5000
+
+Step 3: Create Dockerfile
+-------------------------
+FROM python:3.12-slim
+WORKDIR /app
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+COPY app.py .
+EXPOSE 5000
+CMD ["python"]()
