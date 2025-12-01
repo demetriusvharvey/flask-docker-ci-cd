@@ -1,91 +1,63 @@
 # Flask Docker CI/CD Deployment
 
-## Project Overview
-This project demonstrates a **CI/CD pipeline** for a Flask application using Docker and GitHub Actions.  
-The Docker image is built and pushed to **Docker Hub**, then automatically deployed to an **AWS EC2 instance**.
+A minimal Flask app packaged with Docker and shipped through GitHub Actions to Docker Hub and an EC2 host. Use this repo as a template for testing container-based delivery pipelines.
 
-### Skills Highlighted
-- Dockerizing Python/Flask apps
-- CI/CD with GitHub Actions
-- Docker Hub integration
-- AWS EC2 deployment
-- Troubleshooting and pipeline automation
+## Repository contents
+- `app.py` – simple Flask endpoint returning "Hello from Docker Lab!".
+- `Dockerfile` – builds a Python 3.12 Slim image and runs the app on port 5000.
+- `requirements.txt` – Python dependencies for the container build.
+- `Docker_Flask_Lab_Notes.txt` and screenshots – workflow notes and reference images.
 
----
+## Prerequisites
+- Docker installed locally.
+- Accounts: GitHub, Docker Hub, and AWS (for EC2 deployment).
+- An EC2 instance with SSH access and security group open for HTTP (port 80 or your chosen port).
 
-## Features
-- Dockerized Flask app
-- Automated build and push to Docker Hub
-- Automatic deployment to EC2
-- Publicly accessible Flask app via EC2 instance
-- Error handling and troubleshooting documented
+## Local development
+1. Clone and enter the repo:
+   ```bash
+   git clone https://github.com/<username>/flask-docker-ci-cd.git
+   cd flask-docker-ci-cd
+   ```
+2. Build and run locally:
+   ```bash
+   docker build -t flask-docker-lab .
+   docker run -p 5000:5000 --name flask-app flask-docker-lab
+   ```
+3. Visit http://localhost:5000 to verify the greeting message.
 
----
+## GitHub Actions pipeline
+- Trigger: push to `main` (adjust in workflow if needed).
+- Jobs: build the Docker image, push to Docker Hub, then deploy to EC2.
+- Secrets required in the GitHub repo settings:
+  - `DOCKERHUB_USERNAME` – Docker Hub username.
+  - `DOCKERHUB_TOKEN` – Docker Hub access token with read/write/delete scopes.
+  - `EC2_HOST` – public IP or DNS of the instance.
+  - `EC2_USER` – SSH username (e.g., `ubuntu`).
+  - `EC2_SSH_KEY` – private key contents for SSHing into the instance.
 
-## Architecture / Pipeline
-Local Machine (app.py, Dockerfile)
-│
-▼
-GitHub Repo
-│
-▼
-GitHub Actions Workflow (build & push Docker image)
-│
-▼
-Docker Hub
-│
-▼
-EC2 Instance
-│
-▼
-Docker Container Running Flask App
-│
-▼
-Live Site in Browser
+## Deploying to EC2 (summary)
+1. Ensure Docker is installed on the EC2 host.
+2. Confirm the GitHub Actions secrets above are configured.
+3. Push to `main`; the workflow will SSH into EC2, pull the latest image from Docker Hub, and run the container.
+4. Visit `http://<EC2_HOST>` in a browser to see the Flask response.
 
+## Common issues & fixes
+- **Container exits immediately locally** → run in detached mode and map the port: `docker run -d -p 80:5000 --name flask-app flask-docker-lab`.
+- **Cannot reach app on EC2** → verify security group rules allow inbound HTTP (port 80/5000) and that the container is running.
+- **Git push is rejected** → `git pull --rebase` to sync before pushing.
+- **Docker Hub authentication fails** → regenerate the token with the required scopes and update the GitHub secret.
 
----
-
-## Getting Started
-
-### Requirements
-- Docker installed locally  
-- GitHub account  
-- Docker Hub account  
-- AWS account (for EC2 instance)  
-
-### Setup Steps
-1. Clone the repository:
-```bash
-git clone https://github.com/<username>/flask-docker-ci-cd.git
-cd flask-docker-ci-cd
-
-Build and run Docker image locally (optional test):
-
-docker build -t flask-docker-lab .
-docker run -p 5000:5000 flask-docker-lab
-
-
-Push changes to GitHub to trigger the CI/CD workflow.
-
-Workflow automatically builds the Docker image, pushes it to Docker Hub, and deploys to EC2 (if secrets are configured).
-
-GitHub Actions Secrets
-Secret Name	Description
-DOCKERHUB_USERNAME	Docker Hub username
-DOCKERHUB_TOKEN	Docker Hub personal access token
-EC2_HOST	EC2 public IP
-EC2_USER	EC2 username
-EC2_SSH_KEY	EC2 private key contents (.pem)
-Known Issues / Troubleshooting
-
-Container exits immediately → use detached mode:
-
-docker run -d -p 80:5000 --name flask-app flask-docker-lab
-
-
-Browser can’t access app → check EC2 Security Group allows HTTP (port 80)
-
-Git push errors → run git pull --rebase before pushing
-
-Docker Hub token insufficient → add R/W/D scopes
+## Useful commands
+- Stop and remove local container:
+  ```bash
+  docker stop flask-app && docker rm flask-app
+  ```
+- View running containers:
+  ```bash
+  docker ps
+  ```
+- Tail logs on EC2 (after SSHing in):
+  ```bash
+  docker logs -f flask-app
+  ```
